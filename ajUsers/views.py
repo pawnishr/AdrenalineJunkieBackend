@@ -10,4 +10,5 @@ class UserList(APIView):
     def get(self, request):
         user = AjUser.objects.all()
         serializer = AjUsersSerializer(user, many=True)
-        return Response(serializer.data)
+        data = 'results', serializer.data
+        return Response(data)
