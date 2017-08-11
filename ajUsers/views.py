@@ -1,3 +1,4 @@
+from django.contrib.sites import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -75,7 +76,7 @@ class FetchAjUser(APIView):
                 user = AjUser.objects.all()
                 queryset = user.filter(phoneNumber=phonenumber)
                 serializer = AjUsersSerializer(queryset, many=True)
-                content = {'status': 'failed', 'status': 'success', 'message': 'Create New user',
+                content = {'status': 'success', 'message': 'Create New user',
                            'result': serializer.data}
                 return Response(content, status=status.HTTP_201_CREATED)
             except (not isCreated):
@@ -85,3 +86,4 @@ class FetchAjUser(APIView):
         else:
             content = {'status': 'failed', 'message': 'Bad request. Wrong parameters'}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
+
