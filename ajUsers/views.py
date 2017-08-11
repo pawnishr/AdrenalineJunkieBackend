@@ -7,6 +7,7 @@ from .models import AjUser
 
 class UserList(APIView):
     def get(self, request):
+        """This function will return the list of all users"""
         user = AjUser.objects.all()
         if user:
             serializer = AjUsersSerializer(user, many=True)
@@ -30,14 +31,14 @@ class FetchAjUser(APIView):
             user = AjUser.objects.all()
             queryset = user.filter(userName=username, phoneNumber=phonenumber)
             if not queryset:
-                content = {'message': 'No data found'}
+                content = {'status': 'failed', 'message': 'No data found'}
                 return Response(content, status=status.HTTP_404_NOT_FOUND)
             else:
                 serializer = AjUsersSerializer(queryset, many=True)
                 data = ({'status': 'success', 'result': serializer.data})
             return Response(data)
         else:
-            content = {'message': 'Bad request. Wrong parameters'}
+            content = {'status': 'failed', 'message': 'Bad request. Wrong parameters'}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
@@ -58,7 +59,7 @@ class FetchAjUser(APIView):
             user = AjUser.objects.all()
             queryset = user.filter(phoneNumber=phonenumber)
             if queryset:
-                content = {'message': 'User exists with this phonenumber'}
+                content = {'status': 'failed', 'message': 'User exists with this phonenumber'}
                 return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
         if username and password and gender and emailid and phonenumber:
@@ -71,12 +72,16 @@ class FetchAjUser(APIView):
 
             try:
                 isCreated = ajuser.save()
-                content = {'status': 'success', 'message': 'Create New user'}
+                user = AjUser.objects.all()
+                queryset = user.filter(phoneNumber=phonenumber)
+                serializer = AjUsersSerializer(queryset, many=True)
+                content = {'status': 'failed', 'status': 'success', 'message': 'Create New user',
+                           'result': serializer.data}
                 return Response(content, status=status.HTTP_201_CREATED)
             except (not isCreated):
-                content = {'message': 'Server Error'}
+                content = {'status': 'failed', 'message': 'Server Error'}
                 return Response(content, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         else:
-            content = {'message': 'Bad request. Wrong parameters'}
+            content = {'status': 'failed', 'message': 'Bad request. Wrong parameters'}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
