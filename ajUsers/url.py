@@ -6,5 +6,5 @@ urlpatterns = [
     url(r'^fetchAllUsers/', views.UserList.as_view()),
 
     # user login
-    url(r'^user$', views.FetchAjUser.as_view()),
+    url(r'^user', views.FetchAjUser.as_view()),
 ]
