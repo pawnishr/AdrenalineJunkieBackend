@@ -1,4 +1,4 @@
-from django.http import Http404, HttpResponseServerError
+from django.http import Http404, HttpResponseServerError, HttpResponseBadRequest
 from django.shortcuts import render, HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -29,16 +29,24 @@ class FetchAjUser(APIView):
             user = AjUser.objects.all()
             queryset = user.filter(userName=username, phoneNumber=phonenumber)
             if not queryset:
-                raise Http404()
+                content = {'message': 'No data found'}
+                return Response(content, status=status.HTTP_404_NOT_FOUND)
             else:
                 serializer = AjUsersSerializer(queryset, many=True)
                 data = ({'status': 'success', 'result': serializer.data})
             return Response(data)
         else:
-            raise Http404()
+            content = {'message': 'Bad request. Wrong parameters'}
+            return Response(content, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        """ This method will help to create a new user """
+        """ This method will help to create a new user
+            @:param username
+            @:param password
+            @:param gender
+            @:param emailId
+            @:param phoneNumber
+            """
         username = request.GET.get('userName', None)
         password = request.GET.get('password', None)
         gender = request.GET.get('gender', None)
@@ -52,13 +60,15 @@ class FetchAjUser(APIView):
             ajuser.gender = gender
             ajuser.emailId = emailid
             ajuser.phoneNumber = phonenumber
-            ajuser.save()
+
             isCreated = ajuser.save()
             if isCreated:
                 data = ({'status': 'success'})
                 return HttpResponse(data)
             else:
-                return HttpResponseServerError()
-                raise HttpResponse(status=500)
+                content = {'message': 'Server Error'}
+                return Response(content, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
-            raise Http404
+            content = {'message': 'Bad request. Wrong parameters'}
+            return Response(content, status=status.HTTP_400_BAD_REQUEST)
+
