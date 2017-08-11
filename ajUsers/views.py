@@ -1,9 +1,6 @@
-from django.http import Http404, HttpResponseServerError, HttpResponseBadRequest
-from django.shortcuts import render, HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework import generics
 from .serializer import AjUsersSerializer
 from .models import AjUser
 
@@ -11,9 +8,13 @@ from .models import AjUser
 class UserList(APIView):
     def get(self, request):
         user = AjUser.objects.all()
-        serializer = AjUsersSerializer(user, many=True)
-        data = ({'status': 'success', 'result': serializer.data})
-        return Response(data)
+        if user:
+            serializer = AjUsersSerializer(user, many=True)
+            data = ({'status': 'success', 'result': serializer.data})
+            return Response(data)
+        else:
+            content = {'message': 'No data found'}
+            return Response(content, status=status.HTTP_404_NOT_FOUND)
 
 
 class FetchAjUser(APIView):
@@ -53,6 +54,13 @@ class FetchAjUser(APIView):
         emailid = request.GET.get('emailId', None)
         phonenumber = request.GET.get('phoneNumber', None)
 
+        if phonenumber:
+            user = AjUser.objects.all()
+            queryset = user.filter(phoneNumber=phonenumber)
+            if queryset:
+                content = {'message': 'User exists with this phonenumber'}
+                return Response(content, status=status.HTTP_400_BAD_REQUEST)
+
         if username and password and gender and emailid and phonenumber:
             ajuser = AjUser()
             ajuser.userName = username
@@ -61,14 +69,14 @@ class FetchAjUser(APIView):
             ajuser.emailId = emailid
             ajuser.phoneNumber = phonenumber
 
-            isCreated = ajuser.save()
-            if isCreated:
-                data = ({'status': 'success'})
-                return HttpResponse(data)
-            else:
+            try:
+                isCreated = ajuser.save()
+                content = {'status': 'success', 'message': 'Create New user'}
+                return Response(content, status=status.HTTP_201_CREATED)
+            except (not isCreated):
                 content = {'message': 'Server Error'}
                 return Response(content, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         else:
             content = {'message': 'Bad request. Wrong parameters'}
             return Response(content, status=status.HTTP_400_BAD_REQUEST)
-
